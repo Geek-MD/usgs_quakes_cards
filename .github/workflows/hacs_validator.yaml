@@ -2,23 +2,19 @@ name: HACS Validation
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
   pull_request:
-    branches:
-      - main
+    branches: [main]
 
 jobs:
   validate:
-    name: Validate HACS plugin structure
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Show repo structure (debug)
-        run: tree -a -I '.git'
+      - name: Docker login to GitHub Container Registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
-      - name: Run HACS validation (plugin)
-        run: |
-          docker run --rm -v "${{ github.workspace }}:/data" hacs/validate:latest
+      - name: Validate HACS plugin
+        run: docker run --rm -v "${{ github.workspace }}:/data" ghcr.io/hacs/validate:latest
