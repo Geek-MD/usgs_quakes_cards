@@ -8,16 +8,18 @@
   "type": "lovelace",
   "resources": [
     {
-      "url": "/local/usgs_quakes_cards/map_card.js",
+      "url": "https://github.com/Geek-MD/USGS_Quakes_Cards/releases/latest/download/usgs-quakes-map.js",
       "type": "module"
     },
     {
-      "url": "/local/usgs_quakes_cards/events_list_card.js",
+      "url": "https://github.com/Geek-MD/USGS_Quakes_Cards/releases/latest/download/usgs-quakes-events.js",
       "type": "module"
     },
     {
-      "url": "/local/usgs_quakes_cards/update_button_card.js",
+      "url": "https://github.com/Geek-MD/USGS_Quakes_Cards/releases/latest/download/usgs-quakes-update.js",
       "type": "module"
     }
-  ]
+  ],
+  "type": "plugin",
+  "file": "usgs-quakes-map.js"
 }
