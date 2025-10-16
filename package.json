@@ -4,7 +4,7 @@
   "description": "Custom Lovelace cards for the USGS Quakes Home Assistant integration.",
   "main": "dist/map_card.js",
   "scripts": {
-    "build": "echo 'No build step needed. Just copying source files.'"
+    "build": "rollup -c"
   },
   "keywords": [
     "home-assistant",
@@ -19,5 +19,9 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/Geek-MD/USGS_Quakes_Cards"
+  },
+  "devDependencies": {
+    "rollup": "^3.29.4",
+    "rollup-plugin-terser": "^7.0.2"
   }
 }
