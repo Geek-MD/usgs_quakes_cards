@@ -1,0 +1,23 @@
+{
+  "name": "usgs-quakes-cards",
+  "version": "1.0.0",
+  "description": "Custom Lovelace cards for the USGS Quakes Home Assistant integration.",
+  "main": "dist/map_card.js",
+  "scripts": {
+    "build": "echo 'No build step needed. Just copying source files.'"
+  },
+  "keywords": [
+    "home-assistant",
+    "lovelace",
+    "usgs",
+    "earthquakes",
+    "geo_location",
+    "cards"
+  ],
+  "author": "Edison Montes @_GeekMD_",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Geek-MD/USGS_Quakes_Cards"
+  }
+}
