@@ -1,0 +1,16 @@
+name: HACS Validator (Verbose)
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Run HACS Validation
+        run: |
+          docker run --rm -v "${{ github.workspace }}":/data ghcr.io/hacs/validate
