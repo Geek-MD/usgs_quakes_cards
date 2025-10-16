@@ -1,124 +1,77 @@
-class UsgsQuakesMapCard extends HTMLElement {
-  constructor() {
-    super();
-    this.attachShadow({ mode: "open" });
-  }
-
+class UsgsQuakesMap extends HTMLElement {
   set hass(hass) {
-    if (!this.config || !this.config.entity) return;
+    this.hass = hass;
 
-    const stateObj = hass.states[this.config.entity];
+    // Buscar entidades geo_location del source "usgs_quakes"
+    const geoEntities = Object.entries(hass.states)
+      .filter(
+        ([entity_id, state]) =>
+          entity_id.startsWith("geo_location.") &&
+          state.attributes?.source === "usgs_quakes" &&
+          state.attributes.latitude &&
+          state.attributes.longitude
+      );
 
-    if (!stateObj) {
-      this._renderError(`Entity not found: ${this.config.entity}`);
+    if (geoEntities.length === 0) {
+      this.innerHTML = `<ha-card>No USGS Quakes found</ha-card>`;
       return;
     }
 
-    const allEvents = stateObj.attributes.events || [];
-    const max = this.config.max_events || 50;
-    const events = allEvents.slice(0, max);
+    const coords = geoEntities.map(([_, state]) => [
+      parseFloat(state.attributes.latitude),
+      parseFloat(state.attributes.longitude),
+    ]);
 
-    const coords = events
-      .map(e => [parseFloat(e.latitude), parseFloat(e.longitude)])
-      .filter(e => e.every(Number.isFinite));
+    const titles = geoEntities.map(([_, state]) => state.attributes.friendly_name);
 
-    if (coords.length === 0) {
-      this._renderError("No events to display");
-      return;
-    }
+    const latitudes = coords.map(([lat]) => lat);
+    const longitudes = coords.map(([, lon]) => lon);
+    const latCenter = (Math.min(...latitudes) + Math.max(...latitudes)) / 2;
+    const lonCenter = (Math.min(...longitudes) + Math.max(...longitudes)) / 2;
 
-    const lats = coords.map(c => c[0]);
-    const lons = coords.map(c => c[1]);
-    const latCenter = (Math.min(...lats) + Math.max(...lats)) / 2;
-    const lonCenter = (Math.min(...lons) + Math.max(...lons)) / 2;
-
-    this._renderCard(coords, latCenter, lonCenter);
-  }
-
-  _renderCard(coords, lat, lon) {
-    const tileURL = this.config.tile_url || "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
-    const zoom = this.config.zoom || 4;
-
-    this.shadowRoot.innerHTML = `
-      <style>
-        #map {
-          height: 400px;
-          border-radius: 6px;
-        }
-        ha-card {
-          padding: 0;
-        }
-      </style>
+    this.innerHTML = `
       <ha-card header="USGS Quakes - Map">
-        <div id="map"></div>
+        <div id="map" style="height: 400px;"></div>
       </ha-card>
     `;
 
-    const render = () => {
-      const mapEl = this.shadowRoot.getElementById("map");
+    // Cargar Leaflet si no está presente
+    if (!window.L) {
+      const leafletCSS = document.createElement("link");
+      leafletCSS.rel = "stylesheet";
+      leafletCSS.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
+      document.head.appendChild(leafletCSS);
 
-      if (this._leafletMap) {
-        this._leafletMap.remove();
-      }
-
-      this._leafletMap = window.L.map(mapEl).setView([lat, lon], zoom);
-      window.L.tileLayer(tileURL, {
-        attribution: '&copy; OpenStreetMap contributors'
-      }).addTo(this._leafletMap);
-
-      coords.forEach(([lat, lon]) => {
-        window.L.marker([lat, lon]).addTo(this._leafletMap);
-      });
-
-      const bounds = window.L.latLngBounds(coords);
-      this._leafletMap.fitBounds(bounds, { padding: [20, 20] });
-    };
-
-    this._ensureLeafletLoaded(render);
-  }
-
-  _renderError(message) {
-    this.shadowRoot.innerHTML = `
-      <ha-card header="USGS Quakes - Map">
-        <div style="padding: 16px; color: var(--error-color);">
-          ${message}
-        </div>
-      </ha-card>
-    `;
-  }
-
-  _ensureLeafletLoaded(callback) {
-    if (window.L) {
-      callback();
-      return;
-    }
-
-    const leafletCSS = document.querySelector('link[href*="leaflet.css"]');
-    if (!leafletCSS) {
-      const link = document.createElement("link");
-      link.rel = "stylesheet";
-      link.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
-      document.head.appendChild(link);
-    }
-
-    const leafletJS = document.querySelector('script[src*="leaflet.js"]');
-    if (!leafletJS) {
-      const script = document.createElement("script");
-      script.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
-      script.onload = callback;
-      document.head.appendChild(script);
-    } else if (leafletJS.onload) {
-      leafletJS.onload = callback;
+      const leafletJS = document.createElement("script");
+      leafletJS.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
+      leafletJS.onload = () => this.renderMap(coords, titles, latCenter, lonCenter);
+      document.head.appendChild(leafletJS);
     } else {
-      leafletJS.addEventListener("load", callback);
+      this.renderMap(coords, titles, latCenter, lonCenter);
     }
+  }
+
+  renderMap(coords, titles, lat, lon) {
+    const mapEl = this.shadowRoot?.getElementById("map") || this.querySelector("#map");
+    const map = window.L.map(mapEl).setView([lat, lon], 4);
+
+    window.L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    coords.forEach(([latitude, longitude], index) => {
+      window.L.marker([latitude, longitude])
+        .addTo(map)
+        .bindPopup(titles[index]);
+    });
+
+    const bounds = window.L.latLngBounds(coords);
+    map.fitBounds(bounds, { padding: [20, 20] });
   }
 
   setConfig(config) {
-    if (!config.entity) {
-      throw new Error("The 'entity' field is required");
-    }
-    this.config = config;
+    // No se requiere config.entity porque se auto-descubren las entidades
+    this.config = config || {};
   }
 
   getCardSize() {
@@ -126,4 +79,4 @@ class UsgsQuakesMapCard extends HTMLElement {
   }
 }
 
-customElements.define("usgs-quakes-map", UsgsQuakesMapCard);
+customElements.define("usgs-quakes-map", UsgsQuakesMap);
