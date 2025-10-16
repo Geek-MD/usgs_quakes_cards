@@ -6,19 +6,5 @@
   "domains": ["lovelace"],
   "filename": "map_card.js",
   "render_readme": true,
-  "resources": [
-    {
-      "url": "https://github.com/Geek-MD/usgs_quakes_cards/releases/latest/download/map_card.js",
-      "type": "module"
-    },
-    {
-      "url": "https://github.com/Geek-MD/usgs_quakes_cards/releases/latest/download/events_list_card.js",
-      "type": "module"
-    },
-    {
-      "url": "https://github.com/Geek-MD/usgs_quakes_cards/releases/latest/download/update_button_card.js",
-      "type": "module"
-    }
-  ],
   "type": "plugin"
 }
