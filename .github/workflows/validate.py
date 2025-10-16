@@ -1,108 +1,106 @@
 import json
 import os
-import sys
 import re
+import sys
 
 HACS_FILE = "hacs.json"
-
-REQUIRED_FIELDS = ["name", "description", "filename", "type"]
-OPTIONAL_FIELDS = ["render_readme", "country", "domains", "content_in_root", "resources"]
+REQUIRED_FIELDS = ["name", "filename", "type"]
 VALID_TYPES = ["plugin"]
-JS_COMPONENT_REGEX = r"customElements\.define\s*\(\s*['\"]([\w\-]+)['\"]"
 
-def error(msg):
-    print(f"❌ {msg}")
-    sys.exit(1)
+OPTIONAL_FIELDS = ["country", "domains", "content_in_root", "render_readme"]
 
-def warn(msg):
-    print(f"⚠️ {msg}")
 
-def success(msg):
-    print(f"✅ {msg}")
+def load_hacs_file():
+    if not os.path.exists(HACS_FILE):
+        print("❌ hacs.json not found")
+        sys.exit(1)
+    with open(HACS_FILE, encoding="utf-8") as f:
+        return json.load(f)
 
-def validate_json_schema(data):
+
+def validate_required_fields(data):
     for field in REQUIRED_FIELDS:
         if field not in data:
-            error(f"Missing required field: '{field}'")
-
+            print(f"❌ Required field '{field}' is missing in hacs.json")
+            sys.exit(1)
     if data["type"] not in VALID_TYPES:
-        error(f"Invalid type: '{data['type']}' (must be one of: {VALID_TYPES})")
+        print(f"❌ Invalid type: {data['type']}. Must be one of {VALID_TYPES}")
+        sys.exit(1)
 
+
+def validate_filename_exists(data):
+    filename = data.get("filename")
+    if filename and not os.path.exists(filename):
+        print(f"❌ File '{filename}' specified in 'filename' does not exist")
+        sys.exit(1)
+
+
+def validate_resources(data):
     if "resources" in data:
-        if not isinstance(data["resources"], list):
-            error("The 'resources' field must be a list")
-        for res in data["resources"]:
-            if not isinstance(res, dict) or "url" not in res or "type" not in res:
-                error("Each resource must be an object with 'url' and 'type' fields")
+        for resource in data["resources"]:
+            if "url" not in resource or "type" not in resource:
+                print("❌ Each resource must have 'url' and 'type' keys")
+                sys.exit(1)
 
-    for opt in OPTIONAL_FIELDS:
-        if opt in data:
-            success(f"Found optional field: '{opt}'")
+        filenames_from_resources = [
+            os.path.basename(resource["url"]) for resource in data["resources"]
+        ]
+        if data.get("filename") and data["filename"] not in filenames_from_resources:
+            print(
+                f"❌ The 'filename' ({data['filename']}) is not listed in resources URLs"
+            )
+            sys.exit(1)
 
-def validate_js_file(path):
-    if not os.path.isfile(path):
-        error(f"JS file not found: {path}")
 
-    try:
-        with open(path, "r", encoding="utf-8") as f:
+def validate_custom_element_definition():
+    js_files = [f for f in os.listdir(".") if f.endswith(".js")]
+    if not js_files:
+        print("❌ No JavaScript (.js) files found in root directory")
+        sys.exit(1)
+
+    for file in js_files:
+        with open(file, encoding="utf-8") as f:
             content = f.read()
-    except Exception as e:
-        error(f"Failed to read JS file {path}: {e}")
+            if "customElements.define(" not in content:
+                print(f"❌ Missing customElements.define in {file}")
+                sys.exit(1)
 
-    # Check for customElements.define(...)
-    if not re.search(JS_COMPONENT_REGEX, content):
-        error(f"{path} is missing 'customElements.define(...)'")
 
-    # Simple JS syntax check (balanced braces and parentheses)
-    braces, brackets, parens = 0, 0, 0
-    for char in content:
-        if char == '{': braces += 1
-        if char == '}': braces -= 1
-        if char == '(': parens += 1
-        if char == ')': parens -= 1
-        if char == '[': brackets += 1
-        if char == ']': brackets -= 1
-    if braces != 0 or brackets != 0 or parens != 0:
-        error(f"Unbalanced brackets/braces/parentheses in {path}")
+def validate_js_syntax():
+    js_files = [f for f in os.listdir(".") if f.endswith(".js")]
+    for file in js_files:
+        try:
+            with open(file, encoding="utf-8") as f:
+                content = f.read()
+                if not content.strip():
+                    print(f"❌ JavaScript file {file} is empty")
+                    sys.exit(1)
+                if re.search(r"[^\x00-\x7F]", content):
+                    print(f"⚠️ Warning: Non-ASCII characters found in {file}")
+        except Exception as e:
+            print(f"❌ Failed to read JS file {file}: {e}")
+            sys.exit(1)
 
-    success(f"JS file {path} passed all checks")
 
-def validate_file_field_consistency(data):
-    file_name = data["file"]
-    js_path = os.path.join(".", file_name)
-    validate_js_file(js_path)
+def validate_optional_fields(data):
+    for field in OPTIONAL_FIELDS:
+        if field in data:
+            if not isinstance(data[field], (str, bool, list)):
+                print(f"❌ Optional field '{field}' has invalid type")
+                sys.exit(1)
 
-    # Check if the file is listed in resources
-    if "resources" in data:
-        matched = False
-        for res in data["resources"]:
-            if file_name in res["url"]:
-                matched = True
-                break
-        if not matched:
-            warn(f"'file' ({file_name}) is not referenced in any 'resources.url'")
 
 def main():
-    if not os.path.isfile(HACS_FILE):
-        error(f"{HACS_FILE} not found in current directory")
+    print("✅ Starting HACS plugin structure validation...")
+    data = load_hacs_file()
+    validate_required_fields(data)
+    validate_filename_exists(data)
+    validate_resources(data)
+    validate_optional_fields(data)
+    validate_custom_element_definition()
+    validate_js_syntax()
+    print("✅ All checks passed successfully.")
 
-    try:
-        with open(HACS_FILE, "r", encoding="utf-8") as f:
-            data = json.load(f)
-    except json.JSONDecodeError as e:
-        error(f"Invalid JSON in {HACS_FILE}: {e}")
-
-    success(f"Loaded {HACS_FILE}")
-    validate_json_schema(data)
-    validate_file_field_consistency(data)
-
-    # Validate all listed resources
-    if "resources" in data:
-        for res in data["resources"]:
-            js_filename = os.path.basename(res["url"].split("/")[-1])
-            validate_js_file(js_filename)
-
-    success("🎉 All validations passed!")
 
 if __name__ == "__main__":
     main()
