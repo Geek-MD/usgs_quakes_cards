@@ -1,16 +1,26 @@
-name: HACS Validator (Verbose)
+name: HACS Validation
 
 on:
   push:
     branches: [main]
+  pull_request:
+    branches: [main]
 
 jobs:
-  validate:
+  hacs-validation:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout repo
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Run HACS Validation
+      - name: Debug repo structure
         run: |
-          docker run --rm -v "${{ github.workspace }}":/data ghcr.io/hacs/validate
+          echo "=== Tree structure ==="
+          tree -a -I '.git'
+          echo "=== hacs.json ==="
+          cat hacs.json || echo "❌ hacs.json not found"
+
+      - name: Run HACS validation (plugin)
+        run: |
+          docker run --rm -v "${{ github.workspace }}:/data" ghcr.io/hacs/integration:latest
