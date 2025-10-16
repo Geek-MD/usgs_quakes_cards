@@ -10,11 +10,11 @@ jobs:
   validate:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Docker login to GitHub Container Registry
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
-      - name: Validate HACS plugin
-        run: docker run --rm -v "${{ github.workspace }}:/data" ghcr.io/hacs/validate:latest
+      - name: Run HACS validation
+        run: docker run --rm -v "${{ github.workspace }}:/data" ghcr.io/hacs/validate:4.1.0
