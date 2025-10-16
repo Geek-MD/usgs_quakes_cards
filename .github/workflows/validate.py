@@ -1,74 +1,108 @@
+import json
 import os
 import sys
-import json
+import re
 
-# Define path to the root of the repository
-REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../"))
-HACS_FILE = os.path.join(REPO_ROOT, "hacs.json")
+HACS_FILE = "hacs.json"
 
-# Required keys for hacs.json
-REQUIRED_KEYS = ["name", "description", "type", "file", "render_readme"]
+REQUIRED_FIELDS = ["name", "description", "file", "type"]
+OPTIONAL_FIELDS = ["render_readme", "country", "domains", "content_in_root", "resources"]
+VALID_TYPES = ["plugin"]
+JS_COMPONENT_REGEX = r"customElements\.define\s*\(\s*['\"]([\w\-]+)['\"]"
 
-def load_hacs_json(path):
-    if not os.path.exists(path):
-        print("❌ hacs.json not found at root directory.")
-        sys.exit(1)
+def error(msg):
+    print(f"❌ {msg}")
+    sys.exit(1)
+
+def warn(msg):
+    print(f"⚠️ {msg}")
+
+def success(msg):
+    print(f"✅ {msg}")
+
+def validate_json_schema(data):
+    for field in REQUIRED_FIELDS:
+        if field not in data:
+            error(f"Missing required field: '{field}'")
+
+    if data["type"] not in VALID_TYPES:
+        error(f"Invalid type: '{data['type']}' (must be one of: {VALID_TYPES})")
+
+    if "resources" in data:
+        if not isinstance(data["resources"], list):
+            error("The 'resources' field must be a list")
+        for res in data["resources"]:
+            if not isinstance(res, dict) or "url" not in res or "type" not in res:
+                error("Each resource must be an object with 'url' and 'type' fields")
+
+    for opt in OPTIONAL_FIELDS:
+        if opt in data:
+            success(f"Found optional field: '{opt}'")
+
+def validate_js_file(path):
+    if not os.path.isfile(path):
+        error(f"JS file not found: {path}")
+
     try:
         with open(path, "r", encoding="utf-8") as f:
-            return json.load(f)
+            content = f.read()
     except Exception as e:
-        print(f"❌ Failed to load hacs.json: {e}")
-        sys.exit(1)
+        error(f"Failed to read JS file {path}: {e}")
 
-def validate_keys(hacs_data):
-    missing = [key for key in REQUIRED_KEYS if key not in hacs_data]
-    if missing:
-        print(f"❌ Missing required keys in hacs.json: {', '.join(missing)}")
-        sys.exit(1)
+    # Check for customElements.define(...)
+    if not re.search(JS_COMPONENT_REGEX, content):
+        error(f"{path} is missing 'customElements.define(...)'")
 
-def validate_resources(hacs_data):
-    resources = hacs_data.get("resources", [])
-    if not isinstance(resources, list):
-        print("❌ 'resources' must be a list in hacs.json")
-        sys.exit(1)
+    # Simple JS syntax check (balanced braces and parentheses)
+    braces, brackets, parens = 0, 0, 0
+    for char in content:
+        if char == '{': braces += 1
+        if char == '}': braces -= 1
+        if char == '(': parens += 1
+        if char == ')': parens -= 1
+        if char == '[': brackets += 1
+        if char == ']': brackets -= 1
+    if braces != 0 or brackets != 0 or parens != 0:
+        error(f"Unbalanced brackets/braces/parentheses in {path}")
 
-    all_ok = True
-    for res in resources:
-        url = res.get("url")
-        if not url:
-            print("❌ Resource entry missing 'url'")
-            all_ok = False
-        if not url.endswith(".js"):
-            print(f"❌ Resource URL does not end with .js: {url}")
-            all_ok = False
-    if not all_ok:
-        sys.exit(1)
+    success(f"JS file {path} passed all checks")
 
-def validate_files(hacs_data):
-    """Validate local existence of the JS file referenced by `file` and resources (if local)."""
-    js_file = hacs_data.get("file")
-    if js_file:
-        file_path = os.path.join(REPO_ROOT, js_file)
-        if not os.path.exists(file_path):
-            print(f"❌ JS file specified in 'file' not found: {js_file}")
-            sys.exit(1)
+def validate_file_field_consistency(data):
+    file_name = data["file"]
+    js_path = os.path.join(".", file_name)
+    validate_js_file(js_path)
 
-    resources = hacs_data.get("resources", [])
-    for res in resources:
-        url = res.get("url")
-        if url and not url.startswith("http"):
-            local_path = os.path.join(REPO_ROOT, url)
-            if not os.path.exists(local_path):
-                print(f"❌ JS file specified in 'resources' not found: {url}")
-                sys.exit(1)
+    # Check if the file is listed in resources
+    if "resources" in data:
+        matched = False
+        for res in data["resources"]:
+            if file_name in res["url"]:
+                matched = True
+                break
+        if not matched:
+            warn(f"'file' ({file_name}) is not referenced in any 'resources.url'")
 
 def main():
-    print("📄 Validating hacs.json structure...")
-    hacs_data = load_hacs_json(HACS_FILE)
-    validate_keys(hacs_data)
-    validate_resources(hacs_data)
-    validate_files(hacs_data)
-    print("✅ hacs.json validation passed.")
+    if not os.path.isfile(HACS_FILE):
+        error(f"{HACS_FILE} not found in current directory")
+
+    try:
+        with open(HACS_FILE, "r", encoding="utf-8") as f:
+            data = json.load(f)
+    except json.JSONDecodeError as e:
+        error(f"Invalid JSON in {HACS_FILE}: {e}")
+
+    success(f"Loaded {HACS_FILE}")
+    validate_json_schema(data)
+    validate_file_field_consistency(data)
+
+    # Validate all listed resources
+    if "resources" in data:
+        for res in data["resources"]:
+            js_filename = os.path.basename(res["url"].split("/")[-1])
+            validate_js_file(js_filename)
+
+    success("🎉 All validations passed!")
 
 if __name__ == "__main__":
     main()
