@@ -9,12 +9,18 @@ on:
 jobs:
   validate:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Docker login to GitHub Container Registry
-        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
 
-      - name: Run HACS validation
-        run: docker run --rm -v "${{ github.workspace }}:/data" ghcr.io/hacs/validate:4.1.0
+      - name: Install dependencies
+        run: pip install jsonschema
+
+      - name: Run local HACS validation
+        run: python .github/workflows/validate.py
