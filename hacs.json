@@ -4,10 +4,10 @@
   "content_in_root": true,
   "country": "global",
   "domains": ["lovelace"],
-  "filename": "map_card.js",
+  "filename": "usgs_map_card.js",
   "resources": [
     {
-      "url": "https://github.com/Geek-MD/USGS_Quakes_Cards/releases/latest/download/map_card.js",
+      "url": "https://github.com/Geek-MD/USGS_Quakes_Cards/releases/latest/download/usgs_map_card.js",
       "type": "module"
     }
   ],
