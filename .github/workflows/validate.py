@@ -5,7 +5,7 @@ import re
 
 HACS_FILE = "hacs.json"
 
-REQUIRED_FIELDS = ["name", "description", "file", "type"]
+REQUIRED_FIELDS = ["name", "description", "filename", "type"]
 OPTIONAL_FIELDS = ["render_readme", "country", "domains", "content_in_root", "resources"]
 VALID_TYPES = ["plugin"]
 JS_COMPONENT_REGEX = r"customElements\.define\s*\(\s*['\"]([\w\-]+)['\"]"
