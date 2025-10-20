@@ -1,96 +1,76 @@
-# 🌍 USGS Quakes - List Card
+# 🌍 USGS Quakes Cards
 
-A custom Lovelace card that displays recent USGS earthquake events retrieved from the `sensor.usgs_quakes_latest` entity.
+Custom Lovelace cards to display **recent USGS earthquake events** in Home Assistant.  
+Designed to work with the integration [**USGS Quakes**](https://github.com/Geek-MD/USGS_Quakes).
 
 ---
 
 ## 📦 Features
 
-- Simple, clean list of recent earthquakes.
-- Fully compatible with **USGS Quakes integration**.
-- Displays:
-  - **Title**
-  - **Magnitude**
-  - **Date & time**
-  - **Link to Google Maps** location (based on `coordinates` array in each event)
-- Easy to install via HACS and Lovelace UI.
-- Responsive layout with consistent spacing.
-- Improved aesthetics for event list:
-  - Removed bullet points for a cleaner layout.
-  - All text now left-aligned for better readability.
-  - Earthquake events are displayed with alternating background colors (gray and white), starting with gray — inspired by the FormulaOne Card style.
+- **USGS Quakes - Event List Card**
+  - Displays recent earthquakes from the `sensor.usgs_quakes_latest` attributes.
+  - Includes:
+    - **Title**
+    - **Location**
+    - **Magnitude**
+    - **Datetime** (converted to local time)
+    - **Google Maps link**
+  - Automatically styled with alternating background colors.
+  - Fully localized (`en`, `es` supported).
+
+- **USGS Quakes - Update Button Card**
+  - Allows manual refresh of the earthquake feed.
+  - Stylized button with integration icon and translated text.
+  - Calls the `usgs_quakes.force_feed_update` service.
 
 ---
 
-## 🚀 Installation
+## 🛠️ Installation
 
-### Through HACS (Recommended)
+1. Install via [HACS](https://hacs.xyz/):
+   - Add this repo as a custom repository (Lovelace plugin).
+   - Search for **USGS Quakes Cards** and install.
 
-1. Go to **HACS > Frontend**.
-2. Click the **3 dots > Custom repositories**.
-3. Add:
-   - **URL**: `https://github.com/Geek-MD/USGS_Quakes_Cards`
-   - **Category**: `Lovelace`
-4. Search for **USGS Quakes - List Card** and install.
-5. Ensure this resource is added automatically:
+2. Add to Lovelace Resources (if not auto-added):
+   ```yaml
+   - url: /hacsfiles/usgs_quakes_card/usgs_quakes_card.js
+     type: module
+   ```
 
-```yaml
-url: /hacsfiles/usgs_quakes_cards/usgs_list_card.js
-type: module
-```
-
-If not, add it manually under **Configuration > Dashboards > Resources**.
+3. Use the UI card picker to add:
+   - `USGS Quakes Card`
+   - `USGS Quakes - Update Button`
 
 ---
 
-## 🧩 Usage
-
-Add the card from Lovelace UI or manually using YAML:
-
-### From UI
-1. Click **Add Card**.
-2. Scroll to **Custom: USGS Quakes - List Card**.
-3. Set the `entity` field to the sensor ID (usually `sensor.usgs_quakes_latest` or `sensor.usgs_quakes_feed_usgs_quakes_latest` depending on configuration).
-
-### YAML example
+## ✨ Example YAML (optional)
 
 ```yaml
-type: custom:usgs-list-card
+type: custom:usgs-quakes-card
 entity: sensor.usgs_quakes_latest
 ```
 
-> 🔁 Make sure the entity contains the attribute `events` as a list of earthquake data. This is automatically provided by the [USGS Quakes Integration](https://github.com/Geek-MD/USGS_Quakes).
-
----
-
-## 🧪 Development
-
-The card registers itself using `window.customCards`, allowing it to be added via the Lovelace UI.
-
-All data is pulled from the `events` attribute of the sensor, and each entry is expected to include:
 ```yaml
-title: M 5.2 - near location
-magnitude: 5.2
-time: 2025-10-15T12:00:00.000Z
-coordinates: [-30.12, -71.45]
+type: custom:usgs-quakes-update-button-card
 ```
 
 ---
 
-## 📘 Requirements
+## 🌐 Supported Languages
 
-- Home Assistant 2023.6 or later.
-- The `usgs_quakes` custom integration installed and configured.
+- English (`en`)
+- Español (`es`)
+
+---
+
+## 🔗 Related Projects
+
+- 🔌 [USGS Quakes Integration](https://github.com/Geek-MD/USGS_Quakes)
+- 💥 [Earthquake data from USGS](https://earthquake.usgs.gov/)
 
 ---
 
 ## 👤 Author
 
-**Edison Montes** – [@_GeekMD_](https://github.com/Geek-MD)  
-Part of the [USGS Quakes Project](https://github.com/Geek-MD/USGS_Quakes)
-
----
-
-## 📄 License
-
-MIT License
+Developed by Edison Montes [@_GeekMD_](https://github.com/Geek-MD)  
+[https://github.com/Geek-MD/usgs_quakes_cards](https://github.com/Geek-MD/usgs_quakes_cards)
