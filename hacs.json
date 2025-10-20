@@ -1,14 +1,14 @@
 {
-  "name": "USGS Quakes Map Card",
-  "description": "Lovelace map card to display USGS earthquake geo_location entities.",
-  "filename": "usgs_map_card.js",
+  "name": "USGS Quakes Card",
+  "description": "Lovelace cards to display USGS earthquake events from sensor attributes.",
+  "filename": "usgs_list_card.js",
   "render_readme": true,
   "country": "global",
   "domains": ["lovelace"],
   "content_in_root": true,
   "resources": [
     {
-      "url": "/hacsfiles/usgs_quakes_cards/usgs_map_card.js",
+      "url": "/hacsfiles/usgs_quakes_cards/usgs_list_card.js",
       "type": "module"
     }
   ],
