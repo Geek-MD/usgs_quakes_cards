@@ -1,5 +1,6 @@
 {
-  "force_update": "Force Update",
-  "update_button_description": "Card to force update of USGS Quakes feed.",
-  "update_button_label": "USGS Quakes - Update Button"
+  "cards": {
+    "title": "Latest Earthquakes",
+    "force_update": "Force Update"
+  }
 }
