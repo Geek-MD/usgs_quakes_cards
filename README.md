@@ -6,7 +6,7 @@ These cards enhance the earthquake monitoring experience by providing a visual m
 
 ## Cards Included
 
-- **Map Card (`usgs-quakes-map`)**  
+- **Map Card (`usgs-map-card`)**  
   Displays all recent earthquakes on an interactive map with auto-zoom.
 
 ## Installation
