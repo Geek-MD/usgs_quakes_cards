@@ -1,5 +1,6 @@
 {
-  "force_update": "Forzar Actualización",
-  "update_button_description": "Tarjeta para forzar la actualización del feed de USGS Quakes.",
-  "update_button_label": "USGS Quakes - Botón de Actualización"
+  "cards": {
+    "title": "Últimos Terremotos",
+    "force_update": "Forzar Actualización"
+  }
 }
