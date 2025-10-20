@@ -1,16 +1,16 @@
 {
-  "name": "USGS Quakes Cards",
-  "description": "Custom Lovelace cards for the USGS Quakes integration",
-  "content_in_root": true,
+  "name": "USGS Quakes Map Card",
+  "description": "Lovelace map card to display USGS earthquake geo_location entities.",
+  "filename": "usgs_map_card.js",
+  "render_readme": true,
   "country": "global",
   "domains": ["lovelace"],
-  "filename": "usgs_map_card.js",
+  "content_in_root": true,
   "resources": [
     {
-      "url": "https://github.com/Geek-MD/USGS_Quakes_Cards/releases/latest/download/usgs_map_card.js",
+      "url": "/hacsfiles/usgs_map_card.js",
       "type": "module"
     }
   ],
-  "render_readme": true,
   "type": "plugin"
 }
