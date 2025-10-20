@@ -8,7 +8,7 @@
   "content_in_root": true,
   "resources": [
     {
-      "url": "/hacsfiles/usgs_map_card.js",
+      "url": "/hacsfiles/usgs_quakes_cards/usgs_map_card.js",
       "type": "module"
     }
   ],
