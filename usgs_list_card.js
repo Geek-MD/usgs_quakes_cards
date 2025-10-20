@@ -6,7 +6,7 @@ class UsgsQuakesListCard extends HTMLElement {
     if (!Array.isArray(events) || events.length === 0) {
       this.innerHTML = `
         <ha-card header="USGS Quakes - Events">
-          <div style="padding: 16px;">No earthquake events found</div>
+          <div style="padding: 8px;">No earthquake events found</div>
         </ha-card>`;
       return;
     }
@@ -15,9 +15,9 @@ class UsgsQuakesListCard extends HTMLElement {
       .map(ev => {
         const coordsUrl = `https://www.google.com/maps?q=${ev.latitude},${ev.longitude}`;
         return `
-          <li style="margin-bottom: 16px; padding-left: 8px;">
-            <span style="margin-left: -8px;">•</span>
-            <div style="margin-left: 8px;">
+          <li style="display: flex; align-items: flex-start; margin-bottom: 8px;">
+            <span style="margin-right: 8px;">•</span>
+            <div>
               <div><strong>${ev.title}</strong></div>
               <div>Magnitude: ${ev.magnitude}</div>
               <div>${ev.date_time}</div>
@@ -30,7 +30,7 @@ class UsgsQuakesListCard extends HTMLElement {
 
     this.innerHTML = `
       <ha-card header="USGS Quakes - Events">
-        <ul style="padding: 16px; list-style: none; margin: 0;">
+        <ul style="padding: 8px 16px 16px; list-style: none; margin: 0;">
           ${listItems}
         </ul>
       </ha-card>
@@ -51,7 +51,6 @@ class UsgsQuakesListCard extends HTMLElement {
 
 customElements.define("usgs-list-card", UsgsQuakesListCard);
 
-// Register this card for Lovelace UI support
 window.customCards = window.customCards || [];
 window.customCards.push({
   type: "usgs-list-card",
