@@ -1,9 +1,4 @@
 class UsgsQuakesMap extends HTMLElement {
-  constructor() {
-    super();
-    this.attachShadow({ mode: "open" });
-  }
-
   set hass(hass) {
     const geoEntities = Object.entries(hass.states).filter(
       ([entity_id, state]) =>
@@ -14,31 +9,29 @@ class UsgsQuakesMap extends HTMLElement {
     );
 
     if (geoEntities.length === 0) {
-      this.shadowRoot.innerHTML = `
+      this.innerHTML = `
         <ha-card>
-          <div style="padding: 16px;">No USGS Quake entities found.</div>
+          <div style="padding: 16px;">No quake entities found</div>
         </ha-card>`;
       return;
     }
 
     const coords = geoEntities.map(([_, e]) => [
       parseFloat(e.attributes.latitude),
-      parseFloat(e.attributes.longitude)
+      parseFloat(e.attributes.longitude),
     ]);
 
-    const lats = coords.map(c => c[0]);
-    const lons = coords.map(c => c[1]);
+    const lats = coords.map((c) => c[0]);
+    const lons = coords.map((c) => c[1]);
     const latCenter = (Math.min(...lats) + Math.max(...lats)) / 2;
     const lonCenter = (Math.min(...lons) + Math.max(...lons)) / 2;
 
-    // Clean shadow root
-    this.shadowRoot.innerHTML = `
+    this.innerHTML = `
       <ha-card header="USGS Quakes - Map">
-        <div id="map" style="height: 400px; width: 100%; border-radius: 8px;"></div>
+        <div id="map" style="height: 400px; margin: -16px;"></div>
       </ha-card>
     `;
 
-    // Load Leaflet if not already loaded
     if (!window.L || !window.L.map) {
       const leafletCss = document.createElement("link");
       leafletCss.rel = "stylesheet";
@@ -55,13 +48,11 @@ class UsgsQuakesMap extends HTMLElement {
   }
 
   renderMap(coords, lat, lon) {
-    const mapEl = this.shadowRoot.getElementById("map");
-    if (!mapEl) return;
-
-    const map = window.L.map(mapEl).setView([lat, lon], 5);
+    const mapEl = this.querySelector("#map");
+    const map = window.L.map(mapEl).setView([lat, lon], 4);
 
     window.L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      attribution: "&copy; OpenStreetMap contributors"
+      attribution: "&copy; OpenStreetMap contributors",
     }).addTo(map);
 
     coords.forEach(([lat, lon]) => {
@@ -70,17 +61,10 @@ class UsgsQuakesMap extends HTMLElement {
 
     const bounds = window.L.latLngBounds(coords);
     map.fitBounds(bounds, { padding: [20, 20] });
-
-    // Optional: show a circle for the configured radius (~50km as default)
-    const circle = window.L.circle([lat, lon], {
-      radius: 50000, // 50km
-      color: "#007BFF",
-      fillOpacity: 0.05
-    });
-    circle.addTo(map);
   }
 
   setConfig(config) {
+    // No config.entity required
     this.config = config || {};
   }
 
@@ -89,4 +73,4 @@ class UsgsQuakesMap extends HTMLElement {
   }
 }
 
-customElements.define("usgs-quakes-map", UsgsQuakesMap);
+customElements.define("usgs-map-card", UsgsQuakesMap);
