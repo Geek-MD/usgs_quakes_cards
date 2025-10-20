@@ -1,34 +1,83 @@
 # USGS Quakes Cards
 
-Custom Lovelace cards for the [USGS Quakes](https://github.com/Geek-MD/USGS_Quakes) integration in Home Assistant.
+This repository provides **Lovelace cards** to visualize **USGS Earthquake data** collected via the [USGS Quakes integration](https://github.com/Geek-MD/USGS_Quakes) for Home Assistant.
 
-These cards enhance the earthquake monitoring experience by providing a visual map, a list of recent events, and a quick update button.
+Currently available cards:
 
-## Cards Included
+- **🧾 List Card**: Displays a clean, readable list of the latest earthquake events from the integration.
+- *(Coming soon: Map Card)*
 
-- **Map Card (`usgs-map-card`)**  
-  Displays all recent earthquakes on an interactive map with auto-zoom.
+---
 
-## Installation
+## 📦 Installation via HACS
 
-1. Copy the contents of the `dist/` folder (or download from [Releases](https://github.com/Geek-MD/usgs_quakes_cards/releases)) into your Home Assistant `www/usgs_quakes_cards/` folder.
-2. In **Home Assistant → Settings → Dashboards → Resources**, add:
+1. Go to **HACS > Frontend**.
+2. Click the three dots (⋮) in the top right and select **Custom repositories**.
+3. Add this repository:  
+   ```
+   https://github.com/Geek-MD/usgs_quakes_cards
+   ```
+   Select **Lovelace** as category.
+4. Install the **USGS Quakes Cards**.
+5. After installation, **refresh your browser cache** (Ctrl+F5 or Cmd+Shift+R).
+
+---
+
+## 🧾 USGS List Card
+
+This card displays the list of recent earthquakes retrieved by the `sensor.usgs_quakes_latest`, including:
+
+- Title
+- Magnitude
+- Date and time
+- Link to view location on Google Maps
+
+### ➕ Adding the card
+
+Once installed, you can:
+
+- Add it **from the UI**:
+  - Go to your Lovelace dashboard
+  - Click **Add Card** > **Custom** > **USGS Quakes - List Card**
+- Or add it manually via YAML:
 
 ```yaml
-# Example for each card
-url: /local/usgs_quakes_cards/map_card.js
-type: module
+type: custom:usgs-list-card
+entity: sensor.usgs_quakes_latest
 ```
 
-3. Refresh your browser (Ctrl + F5).
-4. Use the cards in your Lovelace dashboard via manual YAML configuration.
+### 🔍 Example Output
 
-## Example Usage
+Each earthquake event is displayed with:
+- A bullet point
+- The event title in **bold**
+- Magnitude and timestamp
+- A link to view the coordinates on a map
 
-```yaml
-type: custom:usgs-quakes-map
-```
+---
 
-## License
+## 🛠 Requirements
 
-MIT © Edison Montes [@Geek-MD](https://github.com/Geek-MD)
+- You must have the [USGS Quakes](https://github.com/Geek-MD/USGS_Quakes) integration installed and configured.
+- The `sensor.usgs_quakes_latest` must be available and contain recent events.
+
+---
+
+## 📁 File Structure
+
+| File                  | Description                                      |
+|-----------------------|--------------------------------------------------|
+| `usgs_list_card.js`   | Main list card component                         |
+| `hacs.json`           | HACS metadata file                               |
+| `README.md`           | This file                                        |
+| `.github/workflows/`  | GitHub Actions validation for HACS compliance    |
+
+---
+
+## 👨‍💻 Author
+
+Developed by [Geek-MD](https://github.com/Geek-MD)  
+Check out the full USGS integration here:  
+👉 https://github.com/Geek-MD/USGS_Quakes
+
+---
