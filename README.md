@@ -15,6 +15,10 @@ A custom Lovelace card that displays recent USGS earthquake events retrieved fro
   - **Link to Google Maps** location (based on `coordinates` array in each event)
 - Easy to install via HACS and Lovelace UI.
 - Responsive layout with consistent spacing.
+- Improved aesthetics for event list:
+  - Removed bullet points for a cleaner layout.
+  - All text now left-aligned for better readability.
+  - Earthquake events are displayed with alternating background colors (gray and white), starting with gray — inspired by the FormulaOne Card style.
 
 ---
 
