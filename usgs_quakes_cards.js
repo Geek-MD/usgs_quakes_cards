@@ -1,131 +1,139 @@
-// USGS Quakes Card Bundle – List + Button
+// usgs_quakes_card.js
 
-class UsgsQuakesCard extends HTMLElement {
+class UsgsQuakesListCard extends HTMLElement {
+  static getConfigElement() {
+    const el = document.createElement("ha-form");
+    el.schema = [
+      { name: "entity", selector: { entity: { domain: "sensor" } } },
+      { name: "title", selector: { text: {} } },
+    ];
+    return el;
+  }
+
+  static getStubConfig(hass, entities) {
+    return { entity: entities[0] || "sensor.usgs_quakes_latest" };
+  }
+
   constructor() {
     super();
     this.attachShadow({ mode: "open" });
   }
 
   set hass(hass) {
-    const entityId = this.config.entity || "sensor.usgs_quakes_latest";
-    const stateObj = hass.states[entityId];
+    if (!this.config || !hass) return;
 
-    if (!stateObj) {
-      this.shadowRoot.innerHTML = `<ha-card><div class="card-content">Entity not found: ${entityId}</div></ha-card>`;
-      return;
-    }
+    const entity = hass.states[this.config.entity];
+    if (!entity) return;
 
-    const formatted = stateObj.attributes.formatted_events || "";
-    const events = formatted.trim().split("\n\n");
+    const title = this.config.title || "USGS Quakes";
+    const attr = entity.attributes;
+    const events = attr["formatted_events"]?.split("\n\n") || [];
 
-    const lang = hass.locale.language;
-    const localize = (key) =>
-      hass.resources[lang]?.[`component.usgs_quakes.cards.${key}`] || key;
-
-    const title = localize("title");
-
-    const lines = events
-      .map((event, index) => {
-        const bg = index % 2 === 0 ? "var(--secondary-background-color)" : "var(--card-background-color)";
-        return `<div class="event" style="background: ${bg};">${event.replace(/\n/g, "<br />")}</div>`;
+    const eventBlocks = events
+      .map((event, i) => {
+        const background = i % 2 === 0 ? "#f0f0f0" : "#ffffff";
+        return `<div class="event" style="background:${background}">${event.replaceAll("\n", "<br>")}</div>`;
       })
-      .join('<div class="spacer"></div>');
+      .join("");
 
     this.shadowRoot.innerHTML = `
       <style>
         .card {
           padding: 16px;
+          font-size: 14px;
         }
-
         .title {
-          font-size: 20px;
+          font-size: 18px;
           font-weight: bold;
-          margin-bottom: 12px;
-        }
-
-        .event {
-          padding: 12px;
-          border-radius: 12px;
           margin-bottom: 8px;
-          line-height: 1.4;
         }
-
-        .spacer {
-          height: 4px;
+        .event {
+          padding: 8px;
+          border-radius: 8px;
+          margin-bottom: 4px;
         }
       </style>
       <ha-card class="card">
         <div class="title">${title}</div>
-        ${lines}
+        ${eventBlocks}
       </ha-card>
     `;
   }
 
   setConfig(config) {
+    if (!config.entity) throw new Error("Entity is required");
     this.config = config;
   }
 
   getCardSize() {
-    return 3;
+    return 4;
   }
 }
 
+customElements.define("usgs-quakes-list-card", UsgsQuakesListCard);
+
 class UsgsQuakesUpdateButtonCard extends HTMLElement {
+  static getConfigElement() {
+    const el = document.createElement("ha-form");
+    el.schema = [
+      { name: "name", selector: { text: {} } },
+      { name: "icon", selector: { icon: {} } },
+    ];
+    return el;
+  }
+
+  static getStubConfig() {
+    return { name: "Force Update", icon: "mdi:refresh" };
+  }
+
   constructor() {
     super();
     this.attachShadow({ mode: "open" });
   }
 
   set hass(hass) {
-    const serviceDomain = "usgs_quakes";
-    const serviceName = "force_feed_update";
+    if (!this.config || !hass) return;
+
     const lang = hass.locale.language;
+    const translations = {
+      en: "Force Update",
+      es: "Forzar Actualización",
+      fr: "Forcer la Mise à Jour",
+      de: "Aktualisierung Erzwingen",
+      it: "Forza Aggiornamento",
+    };
 
-    const localize = (key) =>
-      hass.resources[lang]?.[`component.usgs_quakes.cards.${key}`] || key;
-
-    const buttonText = localize("force_update");
+    const label = this.config.name || translations[lang] || translations["en"];
+    const icon = this.config.icon || "mdi:refresh";
 
     this.shadowRoot.innerHTML = `
       <style>
-        .card {
+        .button {
           display: flex;
-          flex-direction: column;
           align-items: center;
           justify-content: center;
-          background: var(--card-background-color, #f9f9f9);
-          border-radius: 16px;
-          padding: 16px;
-          box-shadow: var(--ha-card-box-shadow, 0 2px 4px rgba(0, 0, 0, 0.1));
-          cursor: pointer;
-          transition: background 0.3s;
-        }
-
-        .card:hover {
-          background: var(--primary-background-color, #e0e0e0);
-        }
-
-        img {
-          width: 64px;
-          height: 64px;
-          margin-bottom: 12px;
-        }
-
-        .label {
-          font-size: 16px;
+          background: var(--primary-color);
+          color: var(--text-primary-color);
+          padding: 12px;
+          border-radius: 12px;
           font-weight: bold;
-          color: var(--primary-text-color, #333);
-          text-align: center;
+          cursor: pointer;
+        }
+        .button:hover {
+          filter: brightness(0.9);
+        }
+        ha-icon {
+          margin-right: 8px;
         }
       </style>
-      <div class="card">
-        <img src="/local/community/usgs_quakes/icon.png" alt="USGS Icon" />
-        <div class="label">${buttonText}</div>
-      </div>
+      <ha-card class="button">
+        <ha-icon icon="${icon}"></ha-icon>
+        <span>${label}</span>
+      </ha-card>
     `;
 
-    this.shadowRoot.querySelector(".card").onclick = () => {
-      hass.callService(serviceDomain, serviceName);
+    this.shadowRoot.querySelector(".button").onclick = () => {
+      hass.callService("usgs_quakes", "force_feed_update");
     };
   }
 
@@ -138,22 +146,20 @@ class UsgsQuakesUpdateButtonCard extends HTMLElement {
   }
 }
 
-// Register both cards
-customElements.define("usgs-quakes-card", UsgsQuakesCard);
 customElements.define("usgs-quakes-update-button-card", UsgsQuakesUpdateButtonCard);
 
 window.customCards = window.customCards || [];
 window.customCards.push(
   {
-    type: "usgs-quakes-card",
-    name: "USGS Quakes Card",
+    type: "usgs-quakes-list-card",
+    name: "USGS Quakes - Event List",
     preview: false,
-    description: "Formatted list of recent earthquakes from USGS."
+    description: "Displays recent earthquake events from USGS feed."
   },
   {
     type: "usgs-quakes-update-button-card",
     name: "USGS Quakes - Update Button",
     preview: false,
-    description: "Card to force update of USGS Quakes feed."
+    description: "Button to force update the USGS Quakes feed."
   }
 );
